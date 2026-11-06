@@ -1,0 +1,55 @@
+{
+  "manifest_version": "0.4",
+  "name": "{{NAME}}",
+  "display_name": "{{DISPLAY_NAME}}",
+  "version": "0.1.0",
+  "description": "{{DESCRIPTION}} The session is read from Chrome, no token to copy.",
+  "author": {
+    "name": "{{AUTHOR}}"
+  },
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "--frozen", "src/server.py"],
+      "env": {
+        "WEBAPP_CHROME": "${user_config.chrome_source}",
+        "CHROME_PROFILE": "${user_config.chrome_profile}",
+        "{{TOKEN_ENV}}": "${user_config.manual_token}"
+      }
+    }
+  },
+  "tools": [],
+  "user_config": {
+    "chrome_source": {
+      "type": "string",
+      "title": "Chrome source",
+      "description": "Where the {{DOMAIN}} session is read: \"ai\" (default) for Chrome AI, the dedicated Chrome instance; \"chrome\" for your regular Chrome.",
+      "default": "ai",
+      "required": false
+    },
+    "chrome_profile": {
+      "type": "string",
+      "title": "Chrome profile (optional)",
+      "description": "Name or folder of the Chrome profile signed in to {{DOMAIN}}. Empty: the most recently used profile.",
+      "default": "",
+      "required": false
+    },
+    "manual_token": {
+      "type": "string",
+      "title": "Manual token (fallback, optional)",
+      "description": "Value of the \"{{FIRST_COOKIE}}\" cookie of {{DOMAIN}}, used only when no session is found in Chrome.",
+      "sensitive": true,
+      "default": "",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "license": "MIT"
+}

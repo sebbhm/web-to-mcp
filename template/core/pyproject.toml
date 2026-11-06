@@ -1,0 +1,16 @@
+[project]
+name = "webapp-mcp"
+version = "0.1.0"
+description = "Shared engine for web app MCP servers: auth through the Chrome AI (or Chrome) session, HTTP client, MCP server"
+requires-python = ">=3.11"
+# These dependencies must be listed in each MCP's pyproject (the engine is copied there, not installed).
+dependencies = [
+    "mcp>=2.3,<3",
+    "cryptography>=45",
+    "curl_cffi>=0.16",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

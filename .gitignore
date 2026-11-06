@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.web-to-mcp/
+*.mcpb
+.DS_Store
+# The engine is copied into each MCP by pack.py; the template's core is the source of truth.
+examples/*/src/webapp_mcp/

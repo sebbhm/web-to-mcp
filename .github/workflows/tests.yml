@@ -1,0 +1,18 @@
+name: tests
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Engine tests
+        working-directory: template/core
+        run: uv run --with pytest --with pytest-asyncio pytest -q
+      - name: Harness tests
+        working-directory: template/harness
+        run: uv run --with pytest pytest -q
+      - name: Launcher syntax
+        run: bash -n skills/setup-ai-browser/scripts/chrome-ai

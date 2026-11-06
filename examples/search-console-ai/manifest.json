@@ -1,0 +1,73 @@
+{
+  "manifest_version": "0.4",
+  "name": "search-console-ai",
+  "display_name": "Search Console AI",
+  "version": "0.1.0",
+  "description": "Google Search Console's generative AI performance report (AI Overviews, AI Mode, Discover), which the official API does not expose. The session is read from Chrome AI, no token to copy.",
+  "author": {
+    "name": "sebbhm",
+    "url": "https://github.com/sebbhm/web-to-mcp"
+  },
+  "homepage": "https://github.com/sebbhm/web-to-mcp/tree/main/examples/search-console-ai",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "--frozen",
+        "src/server.py"
+      ],
+      "env": {
+        "WEBAPP_CHROME": "${user_config.chrome_source}",
+        "CHROME_PROFILE": "${user_config.chrome_profile}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "gsc_session",
+      "description": "Status of the connection to the site: browser (Chrome AI or Chrome) and profile used, session expiry, manual token."
+    },
+    {
+      "name": "gsc_list_properties",
+      "description": "Search Console properties of the Google account signed in to Chrome: id to pass to the other tools, type (domain or url_prefix) and display name."
+    },
+    {
+      "name": "gsc_ai_overview",
+      "description": "\"Generative AI performance\" report of a property: total impressions in Google's AI answers (AI Overviews, AI Mode), daily series, most seen pages and countries, and the split by device, each row with its share in %."
+    },
+    {
+      "name": "gsc_ai_breakdown",
+      "description": "Full table of the AI report for one dimension: impressions by page, country, device or day, sorted as in Search Console (impressions descending, or dates ascending for date), with the share of the total in %."
+    }
+  ],
+  "user_config": {
+    "chrome_source": {
+      "type": "string",
+      "title": "Chrome source",
+      "description": "Where the Google session is read: \"ai\" (default) for Chrome AI, the dedicated Chrome instance; \"chrome\" for your regular Chrome.",
+      "default": "ai",
+      "required": false
+    },
+    "chrome_profile": {
+      "type": "string",
+      "title": "Chrome profile (optional)",
+      "description": "Name or folder of the Chrome profile signed in to Google. Empty: the most recently used profile.",
+      "default": "",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin"
+    ],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "license": "MIT"
+}
