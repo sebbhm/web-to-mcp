@@ -109,7 +109,11 @@ restart the window and check again, so the login is proven to survive a restart:
 ~/.local/bin/chrome-ai stop; sleep 1; ~/.local/bin/chrome-ai start
 ```
 
-Finish with `dev-browser --connect http://127.0.0.1:9333 -e 'await browser.closePage("setup-check")'`.
+Finish by closing the check page and the window, so nothing stays open (the sign-ins are saved):
+
+```bash
+dev-browser --connect http://127.0.0.1:9333 -e 'await browser.closePage("setup-check")'; ~/.local/bin/chrome-ai stop
+```
 
 ## 7. Report
 

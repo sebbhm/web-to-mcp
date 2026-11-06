@@ -7,10 +7,19 @@ allowed-tools:
 ---
 
 Do browser work in Chrome AI: a separate Chrome window with its own profile (`~/.chrome-ai-profile`), where the
-user is already signed in to their tools. The user's own Chrome is never touched. Start it (it does nothing when
-already open), then connect to it on every run:
+user is already signed in to their tools. The user's own Chrome is never touched.
+
+**Leave nothing open.** Before the first browser command of a task, run `chrome-ai status` and remember the answer.
+When the task is done (or abandoned), close every page you opened with `browser.closePage(name)`, then:
+- if Chrome AI was stopped and you started it, run `chrome-ai stop`;
+- if it was already running, the user may be using it: leave it open, with only your pages closed.
+
+Never leave anonymous tabs from `browser.newPage()` open. The sign-ins stay saved after a stop.
+
+Start it (it does nothing when already open), then connect to it on every run:
 
 ```bash
+chrome-ai status   # once, at the start of the task: running or stopped?
 chrome-ai start
 dev-browser --connect http://127.0.0.1:9333 <<'JS'
 const page = await browser.getPage("example-task");
@@ -41,4 +50,5 @@ instead of 9333 (`chrome-ai url` prints the address).
 - When a script fails, the page stays where it was: reconnect, take a screenshot, log the url and title, and
   continue from there.
 
-Reply with what you saw or did, the final URL, and the screenshot path when it helps.
+Reply with what you saw or did, the final URL, and the screenshot path when it helps, after closing your pages
+(and Chrome AI if you started it).

@@ -278,9 +278,11 @@ def cdp_alive(cdp: str) -> bool:
         return False
 
 
-def ensure_chrome_ai(cdp: str) -> None:
+def ensure_chrome_ai(cdp: str) -> str | None:
+    """Starts Chrome AI when nothing answers on `cdp`. Returns the launcher path when this call started it (so the
+    caller stops it again at the end), None when Chrome AI was already open (the user may be using it: leave it)."""
     if cdp_alive(cdp):
-        return
+        return None
     chrome_ai = shutil.which("chrome-ai") or next(
         (str(p) for p in [Path.home() / ".local/bin/chrome-ai"] if p.exists()), None)
     if not chrome_ai:
@@ -289,7 +291,7 @@ def ensure_chrome_ai(cdp: str) -> None:
     subprocess.run([chrome_ai, "start"], check=False)
     for _ in range(30):
         if cdp_alive(cdp):
-            return
+            return chrome_ai
         time.sleep(0.5)
     sys.exit(f"Chrome AI did not open {cdp} after chrome-ai start.")
 
@@ -298,7 +300,7 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
     dev_browser = shutil.which("dev-browser")
     if not dev_browser:
         sys.exit("dev-browser not found: install it with `npm i -g dev-browser` (version 1.x).")
-    ensure_chrome_ai(args.cdp)
+    started_by_us = ensure_chrome_ai(args.cdp)
     host = urlsplit(args.url).hostname or "page"
     file_name = f"web-to-mcp-capture-{re.sub(r'[^A-Za-z0-9.-]', '_', host)}-{int(time.time())}.json"
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as script:
@@ -319,6 +321,9 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
     finally:
         os.unlink(script.name)
         raw_path.unlink(missing_ok=True)  # unmasked: never leave it behind
+        if started_by_us:
+            # We opened the window, so we close it: no browser left behind after the capture.
+            subprocess.run([started_by_us, "stop"], check=False, capture_output=True)
     if raw.get("error"):
         print(f"Warning: navigation error: {raw['error']}")
     return raw

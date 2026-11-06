@@ -36,6 +36,8 @@ check with the user where they want it (a folder of their projects) before step 
 - Say once that the site's internal API is undocumented (it can change) and that the site's terms of use may forbid
   automation.
 - **Show real data before writing a tool**: the user sees what the endpoint or page returns and agrees.
+- **Leave no browser open.** Run `chrome-ai status` before the first browser step. At the end, close the pages you
+  opened, and `chrome-ai stop` if Chrome AI was stopped when you began (`capture.py` does this on its own).
 - Long scripts for `dev-browser` go in a file run with `dev-browser --connect … run <file>`: complex heredocs can be
   refused by the shell safety check.
 
