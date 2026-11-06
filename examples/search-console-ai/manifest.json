@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "search-console-ai",
   "display_name": "Search Console AI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Google Search Console's generative AI performance report (AI Overviews, AI Mode, Discover), which the official API does not expose. The session is read from Chrome AI, no token to copy.",
   "author": {
     "name": "sebbhm",

@@ -36,7 +36,7 @@ app = WebApp(
     base_url="https://search.google.com",
     tool_prefix="gsc",
     is_auth_error=google_auth_error,
-    version="0.1.0",
+    version="0.1.1",
 )
 
 # --- Reading the page ----------------------------------------------------------------------------------------------

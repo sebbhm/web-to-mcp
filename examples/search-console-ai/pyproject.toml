@@ -1,6 +1,6 @@
 [project]
 name = "search-console-ai-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Google Search Console's generative AI performance report (AI Overviews, AI Mode, Discover), read with the Chrome AI session."
 requires-python = ">=3.11"
 # webapp_mcp engine dependencies (checked by template/tools/pack.py); add the adapter's own here.
