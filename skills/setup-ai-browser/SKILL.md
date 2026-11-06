@@ -26,6 +26,29 @@ The setup lives in four places:
 If the argument gives another port, add `export CHROME_AI_PORT=<port>` once to `~/.zshrc` and `~/.zprofile` and use
 that port everywhere below.
 
+## 0. Started from a link?
+
+This skill may have been started from a link (for example "Run https://github.com/sebbhm/web-to-mcp/tree/main/skills/setup-ai-browser"
+pasted in the Code tab of the Claude desktop app) instead of the installed plugin. Then `${CLAUDE_SKILL_DIR}` is not a
+real folder: install nothing else from the repository, and download the launcher only when step 3 needs it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sebbhm/web-to-mcp/main/skills/setup-ai-browser/scripts/chrome-ai -o /tmp/chrome-ai
+```
+
+Then install the plugin, so the `ai-browser` and `web-to-mcp` skills exist in the user's next conversations:
+
+```bash
+claude plugin marketplace add sebbhm/web-to-mcp && claude plugin install web-to-mcp@web-to-mcp
+```
+
+If `claude` is not found (the desktop app alone may not put it on the PATH), check `~/.local/bin/claude`. If it is
+missing too, tell the user you are installing the Claude Code command line with Anthropic's official installer (no
+password, into `~/.local/bin`), run `curl -fsSL https://claude.ai/install.sh | bash`, then run the two commands above
+with `~/.local/bin/claude`. The terminal and the desktop app share the same settings, so the plugin also appears in
+the app (`+` next to the prompt box, then Plugins, to manage it). Either way, continue with the setup: it does not
+need the plugin. The new skills are available in a new conversation (or after `/reload-plugins`).
+
 ## 1. Check the machine
 
 macOS only. On Windows or Linux, stop and say so.
@@ -56,6 +79,7 @@ sudo: tell the user their Node install needs a user-owned prefix (`npm config se
 
 ```bash
 mkdir -p ~/.local/bin && cp "${CLAUDE_SKILL_DIR}/scripts/chrome-ai" ~/.local/bin/chrome-ai && chmod +x ~/.local/bin/chrome-ai
+# Started from a link (step 0): copy /tmp/chrome-ai instead of "${CLAUDE_SKILL_DIR}/scripts/chrome-ai".
 grep -l '.local/bin' ~/.zshenv ~/.zprofile ~/.zshrc ~/.bash_profile ~/.bashrc 2>/dev/null
 ```
 

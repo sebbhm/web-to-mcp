@@ -2,7 +2,7 @@
   "name": "web-to-mcp",
   "metadata": {
     "description": "Marketplace for the web-to-mcp plugin: a dedicated AI browser and a factory for MCP servers over web apps without an API.",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "owner": {
     "name": "sebbhm",
@@ -13,7 +13,7 @@
       "name": "web-to-mcp",
       "source": "./",
       "description": "Give Claude its own signed-in Chrome, then turn any web app without an API into an MCP server (.mcpb).",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "category": "development",
       "tags": ["mcp", "browser", "automation"]
     }

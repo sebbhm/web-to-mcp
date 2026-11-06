@@ -25,7 +25,16 @@ Claude Desktop and Cowork users who only want a ready-made MCP: download the `.m
 
 ## Install
 
-In Claude Code:
+**Simplest, from the Code tab of the Claude desktop app** (or any Claude Code session): paste this message.
+
+```
+Run https://github.com/sebbhm/web-to-mcp/tree/main/skills/setup-ai-browser
+```
+
+Claude installs the plugin, dev-browser and Chrome AI, asks you to sign in to your sites once, and checks that it
+works. Start a new conversation afterwards to use the plugin's skills.
+
+**Or with commands**, in Claude Code:
 
 ```
 /plugin marketplace add sebbhm/web-to-mcp

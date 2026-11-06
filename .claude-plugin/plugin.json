@@ -1,6 +1,6 @@
 {
   "name": "web-to-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Give Claude its own signed-in Chrome, then turn any web app without an API into an MCP server (.mcpb) that reuses that browser session.",
   "author": {
     "name": "sebbhm",
