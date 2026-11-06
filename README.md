@@ -2,9 +2,10 @@
 
 A Claude Code plugin that does two things:
 
-1. **Gives Claude its own browser.** Chrome AI is a separate Chrome window with its own profile. You sign in there
-   once to the sites Claude should use, and Claude drives it with [dev-browser](https://github.com/SawyerHood/dev-browser).
-   Your own Chrome and its profiles are never touched.
+1. **Gives Claude its own browser.** Chrome AI is a separate Chrome with its own profile. You sign in there once to
+   the sites Claude should use, and Claude drives it with [dev-browser](https://github.com/SawyerHood/dev-browser).
+   It runs in the background, with no window and no Dock icon; it shows up only when a site needs you to sign in
+   again. Your own Chrome and its profiles are never touched.
 2. **Turns a web app without an API into an MCP server.** Claude finds where the page gets its data, validates the
    session, writes the tools and packages them as a `.mcpb` extension for Claude Desktop. The extension reuses the
    Chrome AI session: no token to copy, and it picks up a renewed session by itself.
@@ -50,13 +51,15 @@ Try: "open my Stripe dashboard in Chrome AI and tell me yesterday's revenue", or
 
 The launcher is a small shell script, [`skills/setup-ai-browser/scripts/chrome-ai`](skills/setup-ai-browser/scripts/chrome-ai).
 Copy it to `~/.local/bin/chrome-ai`, make it executable, run `chrome-ai app` once to get a "Chrome AI" app in
-Spotlight, then `chrome-ai start` and sign in to your sites in that window.
+Spotlight (it opens the visible window), and sign in to your sites there. `chrome-ai start` runs it in the
+background, `chrome-ai show [url]` makes it a window, `chrome-ai hide` sends it back, `chrome-ai stop` quits it.
 
 ## How an MCP finds your session
 
 The engine (`template/core/webapp_mcp`) reads the site's cookies from the Chrome AI profile on disk
 (`~/.chrome-ai-profile`), decrypting them with Chrome's key from the macOS Keychain ("Chrome Safe Storage"; macOS asks
-once). If the session is missing or rejected, it opens the site's sign-in page in Chrome AI and waits for you.
+once). If the session is missing or rejected, it shows Chrome AI as a window on the site's sign-in page and waits
+for you; once you are signed in, Chrome AI goes back to the background.
 
 To read your regular Chrome instead, set `WEBAPP_CHROME=chrome` (and optionally `CHROME_PROFILE`) in the extension's
 settings.

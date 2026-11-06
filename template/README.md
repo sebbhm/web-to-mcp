@@ -36,7 +36,7 @@ read from the data embedded in the page).
 
 The session is read from **Chrome AI** by default: a dedicated Chrome instance for the AI, with its own user data
 folder (`$CHROME_AI_PROFILE`, default `~/.chrome-ai-profile`) and remote debugging on `http://127.0.0.1:9333`
-(`$CHROME_AI_PORT`). Start it with `chrome-ai start` and sign in to the site there once. `capture.py` drives it
+(`$CHROME_AI_PORT`). `chrome-ai start` runs it in the background; `chrome-ai show [url]` makes it a visible window to sign in to the site once, `chrome-ai hide` sends it back. `capture.py` drives it
 with the `dev-browser` CLI (`npm i -g dev-browser`).
 
 To read the regular Chrome instead: `--chrome chrome` on the harness scripts, and `WEBAPP_CHROME=chrome` for an
@@ -125,9 +125,11 @@ Whenever a session is needed, the engine tries in order:
    one whose session was used most recently wins (or the profile set by `CHROME_PROFILE`, the extension's
    "Chrome profile" field). Expired cookies, and JWTs whose `exp` date has passed, are ignored.
 2. **The manual token**, if configured.
-3. **Otherwise the sign-in page opens in that Chrome**, in the right profile. The engine waits up to 45 s for the
-   session to appear (Chrome writes its cookies to disk about every 30 s). Past that, it asks to retry the
-   request, and does not reopen the page for 2 minutes.
+3. **Otherwise the sign-in page opens in that Chrome**: for Chrome AI, which runs in the background, as a visible
+   window (`chrome-ai show <login_url>`); for the regular Chrome, in the right profile. The engine waits up to 45 s
+   for the session to appear (Chrome writes its cookies to disk about every 30 s), then sends Chrome AI back to the
+   background (`chrome-ai hide`). Past 45 s, it asks to retry the request, and does not reopen the page for 2
+   minutes.
 
 If the site rejects a session, that session is never reused: the engine looks for a fresh one and retries once.
 

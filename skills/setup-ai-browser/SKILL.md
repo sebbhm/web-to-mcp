@@ -64,10 +64,12 @@ and `~/.zshrc` (bash: `~/.bash_profile` and `~/.bashrc`). Then create the Spotli
 
 ```bash
 ~/.local/bin/chrome-ai app
-~/.local/bin/chrome-ai start
+~/.local/bin/chrome-ai show
 ```
 
-`start` prints `http://127.0.0.1:9333` and opens a new Chrome window. Tell the user this window is the AI's Chrome,
+Chrome AI normally runs in the background, with no window: `chrome-ai start` (what agents use) never shows anything
+on screen. `show` makes it a visible window, for signing in or watching; `hide` sends it back. Tell the user this
+window is the AI's Chrome, that it will usually stay invisible and reappear only when a site needs them to sign in,
 and suggest picking a different theme color in it (Settings, Appearance) so they never confuse it with their own.
 
 ## 4. The user signs in
@@ -94,7 +96,7 @@ Show them this and move on; do not wait.
 Ask which site they signed in to, then open it in a named page, take a screenshot and look at it:
 
 ```bash
-~/.local/bin/chrome-ai start >/dev/null && dev-browser --connect http://127.0.0.1:9333 <<'JS'
+~/.local/bin/chrome-ai hide >/dev/null && dev-browser --connect http://127.0.0.1:9333 <<'JS'
 const page = await browser.getPage("setup-check");
 await page.goto("https://github.com");
 const shot = await page.shot({ name: "setup-check.jpg" });
@@ -102,8 +104,9 @@ console.log(JSON.stringify({ title: await page.title(), url: page.url(), screens
 JS
 ```
 
-Replace the URL with a site the user signed in to. Open the screenshot and check the user appears signed in. Then
-restart the window and check again, so the login is proven to survive a restart:
+This runs in the background (nothing on screen): it also proves the sign-ins work without a window. Replace the URL
+with a site the user signed in to. Open the screenshot and check the user appears signed in. Then restart Chrome AI
+and check again, so the login is proven to survive a restart:
 
 ```bash
 ~/.local/bin/chrome-ai stop; sleep 1; ~/.local/bin/chrome-ai start
@@ -119,6 +122,7 @@ dev-browser --connect http://127.0.0.1:9333 -e 'await browser.closePage("setup-c
 
 End with a short checklist, a check or a cross on each line: Chrome found, dev-browser 1.0.0 installed, launcher
 works, Chrome AI app created, user signed in, permissions explained, screenshot shows a signed-in page, login
-survives a restart. Then three lines for the user: open "Chrome AI" from Spotlight (or just ask the agent, which
-starts it itself), sign in there once to any new site, and one thing to try now, such as "open my analytics
+survives a restart, works in the background. Then three lines for the user: Chrome AI runs invisibly when the agent
+needs it and shows up only when a site asks them to sign in; to sign in to a new site, open "Chrome AI" from
+Spotlight (or `chrome-ai show`); and one thing to try now, such as "open my analytics
 dashboard and tell me yesterday's visits" or "/web-to-mcp:web-to-mcp to turn a site into an MCP".

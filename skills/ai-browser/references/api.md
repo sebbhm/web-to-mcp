@@ -74,5 +74,5 @@ dev-browser --connect http://127.0.0.1:9333 -e 'code'       run inline code
 dev-browser --headless <<'JS' ... JS                        throwaway signed-out browser
 dev-browser pages | status | stop                           list tabs, inspect or stop the daemon
 dev-browser help <topic>                                    built-in documentation
-chrome-ai start | status | stop | url | app                 open, check, quit Chrome AI
+chrome-ai start | show [url] | hide | status | stop | app   background start, visible window, back, state, quit
 ```

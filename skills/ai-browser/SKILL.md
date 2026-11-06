@@ -6,8 +6,10 @@ allowed-tools:
   - Bash(chrome-ai *)
 ---
 
-Do browser work in Chrome AI: a separate Chrome window with its own profile (`~/.chrome-ai-profile`), where the
-user is already signed in to their tools. The user's own Chrome is never touched.
+Do browser work in Chrome AI: a dedicated Chrome with its own profile (`~/.chrome-ai-profile`), where the user is
+already signed in to their tools. The user's own Chrome is never touched. `chrome-ai start` runs it **in the
+background**: no window, no Dock icon, nothing on the user's screen. It becomes a visible window only when a human is
+needed (`chrome-ai show`), then goes back (`chrome-ai hide`).
 
 **Leave nothing open.** Before the first browser command of a task, run `chrome-ai status` and remember the answer.
 When the task is done (or abandoned), close every page you opened with `browser.closePage(name)`, then:
@@ -43,8 +45,10 @@ instead of 9333 (`chrome-ai url` prints the address).
   `page.click("ref/e12")`, `page.fill("ref/e7", "text")`.
 - Take screenshots with `await page.shot()` (it returns `{ path }` under `~/.dev-browser/v1/tmp/`) and look at the
   image before saying a page looks right. Other files go there too, through `saveFile(name, data)`.
-- If a site asks to sign in, stop and ask the user to sign in in the Chrome AI window, then continue: the session
-  stays saved. Never type passwords, one-time codes or card numbers, and never solve a captcha.
+- If a site shows its sign-in page (or the user is signed out), run `chrome-ai show <that page's url>`: Chrome AI
+  becomes a visible window on that page. Ask the user to sign in there and say "done", then run `chrome-ai hide` to
+  send it back to the background, and continue: the session stays saved. When the user wants to watch what you do,
+  `chrome-ai show` too, and `chrome-ai hide` when they are done. Never type passwords, one-time codes or card numbers, and never solve a captcha.
 - Ask the user before any click that sends, publishes, pays, deletes or accepts terms.
 - For a signed-out check (how a visitor sees a site), run without `--connect` and with `--headless`, and say so.
 - When a script fails, the page stays where it was: reconnect, take a screenshot, log the url and title, and

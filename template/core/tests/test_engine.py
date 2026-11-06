@@ -27,7 +27,7 @@ from webapp_mcp import (
     resolve_user_data_dir,
 )
 from webapp_mcp.chrome import CHROME_DIR
-from webapp_mcp.session import open_in_chrome, open_in_chrome_ai
+from webapp_mcp.session import hide_chrome_ai, open_in_chrome, open_in_chrome_ai
 
 NOW = datetime.now(timezone.utc)
 LOGIN_URL = "https://example.com/login"
@@ -73,6 +73,8 @@ def cookie(value: str, *, profile="Profile 5", expires=NOW + timedelta(days=30),
 def session(chrome: FakeChrome, opened: list | None = None, **kwargs) -> BrowserSession:
     if opened is not None:
         kwargs["opener"] = lambda url, profile: opened.append((url, profile))
+        # Records "hide" (back to the background) next to the opened pages, instead of running chrome-ai.
+        kwargs.setdefault("hider", lambda: opened.append("hidden"))
     return BrowserSession(
         app_name="example",
         domain="example.com",
@@ -149,7 +151,14 @@ async def test_waits_for_login_then_finds_it():
 
     creds, _ = await asyncio.gather(s.credentials(), user_signs_in())
     assert creds.values == {"Authorization": "new-session"}
-    assert opened == [(LOGIN_URL, "Profile 5")]
+    # The login window was shown, the user signed in, and Chrome AI went back to the background.
+    assert opened == [(LOGIN_URL, "Profile 5"), "hidden"]
+
+
+async def test_no_hide_when_the_session_was_already_there():
+    s = session(FakeChrome([cookie("ok")]), opened := [])
+    await s.credentials()
+    assert opened == []
 
 
 async def test_timeout_gives_a_clear_message_naming_chrome_ai():
@@ -266,13 +275,10 @@ def test_regular_chrome_opener_uses_the_profile():
     ]
 
 
-def test_chrome_ai_opener_starts_the_launcher_then_opens_the_page(tmp_path):
+def test_chrome_ai_opener_shows_a_visible_window_on_the_login_page(tmp_path):
     run = Commands()
     open_in_chrome_ai(LOGIN_URL, user_data_dir=tmp_path, run=run, which=lambda name: "/opt/bin/chrome-ai")
-    assert run.calls == [
-        ["/opt/bin/chrome-ai", "start"],
-        ["open", "-na", "Google Chrome", "--args", f"--user-data-dir={tmp_path}", LOGIN_URL],
-    ]
+    assert run.calls == [["/opt/bin/chrome-ai", "show", LOGIN_URL]]
 
 
 def test_chrome_ai_opener_finds_the_launcher_in_local_bin(tmp_path):
@@ -280,7 +286,7 @@ def test_chrome_ai_opener_finds_the_launcher_in_local_bin(tmp_path):
     launcher.write_text("#!/bin/sh\n")
     run = Commands()
     open_in_chrome_ai(LOGIN_URL, user_data_dir=tmp_path, run=run, which=lambda name: None, local_launcher=launcher)
-    assert run.calls[0] == [str(launcher), "start"]
+    assert run.calls[0] == [str(launcher), "show", LOGIN_URL]
 
 
 def test_chrome_ai_opener_without_launcher_starts_chrome_itself(monkeypatch, tmp_path):
@@ -290,6 +296,7 @@ def test_chrome_ai_opener_without_launcher_starts_chrome_itself(monkeypatch, tmp
         LOGIN_URL, user_data_dir=tmp_path, run=run, which=lambda name: None, local_launcher=tmp_path / "missing"
     )
     assert run.calls == [
+        ["pkill", "-f", f"--headless=new.*--user-data-dir={tmp_path}"],
         [
             "open", "-na", "Google Chrome", "--args",
             "--remote-debugging-port=9444", "--remote-debugging-address=127.0.0.1",
@@ -302,8 +309,16 @@ def test_chrome_ai_opener_without_launcher_starts_chrome_itself(monkeypatch, tmp
 def test_chrome_ai_opener_falls_back_when_the_launcher_fails(tmp_path):
     run = Commands(ok=False)
     open_in_chrome_ai(LOGIN_URL, user_data_dir=tmp_path, run=run, which=lambda name: "/opt/bin/chrome-ai")
-    assert run.calls[0] == ["/opt/bin/chrome-ai", "start"]
-    assert "--remote-debugging-port=9333" in run.calls[1] and run.calls[1][-1] == LOGIN_URL
+    assert run.calls[0] == ["/opt/bin/chrome-ai", "show", LOGIN_URL]
+    assert run.calls[1][0] == "pkill"
+    assert "--remote-debugging-port=9333" in run.calls[2] and run.calls[2][-1] == LOGIN_URL
+
+
+def test_hide_chrome_ai_uses_the_launcher(tmp_path):
+    run = Commands()
+    hide_chrome_ai(run=run, which=lambda name: "/opt/bin/chrome-ai")
+    hide_chrome_ai(run=run, which=lambda name: None, local_launcher=tmp_path / "missing")
+    assert run.calls == [["/opt/bin/chrome-ai", "hide"]]
 
 
 @pytest.fixture
@@ -321,7 +336,8 @@ async def test_session_opens_login_page_in_chrome_ai_by_default(commands, monkey
     s = session(FakeChrome(), login_wait=0)
     with pytest.raises(LoginRequired, match="in Chrome AI"):
         await s.credentials()
-    [command] = commands.calls
+    assert commands.calls[0][0] == "pkill"  # a background instance would swallow the page: quit it first
+    command = commands.calls[-1]
     assert f"--user-data-dir={tmp_path / 'ai'}" in command and "--remote-debugging-port=9333" in command
     assert not any(arg.startswith("--profile-directory") for arg in command)
 

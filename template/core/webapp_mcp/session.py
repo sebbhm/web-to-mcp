@@ -87,20 +87,22 @@ def open_in_chrome_ai(
     which: Callable[[str], str | None] | None = None,
     local_launcher: Path | None = None,
 ) -> None:
-    """Opens the page in Chrome AI (the AI's dedicated Chrome instance), starting it first if needed."""
+    """Opens the login page in Chrome AI as a VISIBLE window, so the user can type their sign-in.
+
+    Chrome AI normally runs in the background (headless: no window, no Dock icon). A login needs a human, so
+    `chrome-ai show <url>` restarts it as a window when it was in the background (same profile, same cookies) and
+    opens the page. `profile` is unused: Chrome AI has a single profile."""
     run = _run if run is None else run
     user_data_dir = Path(user_data_dir) if user_data_dir else resolve_user_data_dir("ai")
-    target = [f"--user-data-dir={user_data_dir}", *([f"--profile-directory={profile}"] if profile else []), url]
     launcher = find_chrome_ai_launcher(which, local_launcher)
-    if launcher and run([launcher, "start"], timeout=60):
-        # Chrome hands a command carrying an existing --user-data-dir to the instance that owns it,
-        # which opens the URL in a new tab.
-        run(["open", "-na", "Google Chrome", "--args", *target])
+    if launcher and run([launcher, "show", url], timeout=60):
         return
-    # No launcher (or it failed): start Chrome AI with the launcher's flags and the URL in one command. If
-    # Chrome AI already runs, Chrome forwards the command to it (the start-up flags are then ignored);
-    # otherwise the new instance starts on the login page. `open` returns at once and Chrome runs under
-    # launchd, so it is detached from this server and outlives it.
+    # No launcher (or it failed): quit a background (headless) instance first, since Chrome would forward the page
+    # to it and nobody would see it; then start Chrome AI as a window with the launcher's flags and the URL in one
+    # command. If a visible Chrome AI already runs, Chrome forwards the command to it (the start-up flags are then
+    # ignored). `open` returns at once and Chrome runs under launchd, detached from this server.
+    run(["pkill", "-f", f"--headless=new.*--user-data-dir={user_data_dir}"])
+    target = [f"--user-data-dir={user_data_dir}", url]
     flags = [
         f"--remote-debugging-port={port or chrome_ai_port()}",
         "--remote-debugging-address=127.0.0.1",
@@ -108,6 +110,17 @@ def open_in_chrome_ai(
         "--no-default-browser-check",
     ]
     run(["open", "-na", "Google Chrome", "--args", *flags, *target])
+
+
+def hide_chrome_ai(
+    *, run: Callable[..., bool] | None = None, which: Callable[[str], str | None] | None = None, local_launcher: Path | None = None
+) -> None:
+    """Sends Chrome AI back to the background after a sign-in (`chrome-ai hide`). Without the launcher, leave the
+    window: the user can close it, the sign-in is saved either way."""
+    run = _run if run is None else run
+    launcher = find_chrome_ai_launcher(which, local_launcher)
+    if launcher:
+        run([launcher, "hide"], timeout=60)
 
 
 def _earliest(dates: list[datetime | None]) -> datetime | None:
@@ -147,6 +160,7 @@ class BrowserSession:
         chrome: ChromeCookies | None = None,
         opener: Opener | None = None,
         chrome_source: str | None = None,
+        hider: Callable[[], None] | None = None,
     ):
         self.app_name = app_name
         self.domain = domain
@@ -159,6 +173,10 @@ class BrowserSession:
         self.user_data_dir = getattr(chrome, "user_data_dir", None) or resolve_user_data_dir(self.source)
         self.chrome = chrome or ChromeCookies(self.user_data_dir)
         self.opener = opener or self._default_opener()
+        # Chrome AI runs in the background; the login flow shows it as a window, and once a session is found the
+        # window goes back to the background, so nothing stays on the user's screen.
+        self.hider = hider or (hide_chrome_ai if self.source == "ai" else None)
+        self._window_shown = False
         self.current: Credentials | None = None
         self.last_seen_profile: str | None = None  # last profile where a cookie, even expired, was seen
         self._rejected: set[tuple] = set()
@@ -220,6 +238,10 @@ class BrowserSession:
             if not self.current or self.current.expired:
                 self.current = await asyncio.to_thread(self.read_chrome) or self.from_env() or await self._wait_for_login()
                 log.info("Session %s: %s", self.app_name, self.current.source)
+                if self._window_shown and self.hider:
+                    # The user signed in through the window we showed: send Chrome AI back to the background.
+                    self._window_shown = False
+                    await asyncio.to_thread(self.hider)
             return self.current
 
     def reject(self, creds: Credentials) -> None:
@@ -235,6 +257,7 @@ class BrowserSession:
             log.info("Opening login page %s in %s (profile %s)", self.login_url, self.browser, profile or "default")
             await asyncio.to_thread(self.opener, self.login_url, profile)
             self._last_opened = time.monotonic()
+            self._window_shown = self.source == "ai"
         deadline = time.monotonic() + self.login_wait
         while time.monotonic() < deadline:
             await asyncio.sleep(2)

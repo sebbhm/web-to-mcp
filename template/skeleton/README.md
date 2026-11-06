@@ -7,11 +7,11 @@ uses the site's internal API: undocumented, it can change without notice.
 
 ## Install
 
-1. Sign in on {{LOGIN_URL}} in Chrome AI (the dedicated Chrome instance, started with `chrome-ai start`).
+1. Sign in on {{LOGIN_URL}} in Chrome AI (the dedicated Chrome instance: `chrome-ai show` opens it as a window). It then runs in the background.
 2. Double-click `{{NAME}}.mcpb` (or drag it into Claude Desktop → Settings → Extensions).
 
-If the session expires, the MCP opens the sign-in page in Chrome and waits up to 45 s for you to sign in again;
-past that, it asks you to retry the request.
+If the session is missing or expires, the MCP shows Chrome AI as a window on the sign-in page and waits up to 45 s
+for you to sign in again, then sends it back to the background; past 45 s, it asks you to retry the request.
 
 ### Which Chrome?
 
